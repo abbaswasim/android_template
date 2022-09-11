@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- BEGIN_INCLUDE(manifest) -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+		  xmlns:tools="http://schemas.android.com/tools"
           package="com.example.native_activity"
           android:versionCode="1"
           android:versionName="1.0">
+
+  <!-- The following are required if want to read from /sdcard for example. -->
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+ 	                 tools:ignore="ScopedStorage" />
 
   <!-- This .apk has no Java code itself, so set hasCode to false. -->
   <application
@@ -11,6 +18,8 @@
       android:fullBackupContent="false"
       android:icon="@mipmap/ic_launcher"
       android:label="@string/app_name"
+	  android:debuggable="true"
+	  android:requestLegacyExternalStorage="true"
       android:hasCode="false">
 
     <!-- Our activity is the built-in NativeActivity framework class.

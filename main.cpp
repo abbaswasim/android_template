@@ -18,6 +18,9 @@
 //BEGIN_INCLUDE(all)
 #include <initializer_list>
 #include <memory>
+#include <fstream>
+#include <string>
+#include <vector>
 #include <cstdlib>
 #include <cstring>
 #include <jni.h>
@@ -306,6 +309,24 @@ ASensorManager* AcquireASensorManagerInstance(android_app* app) {
   return getInstanceFunc();
 }
 
+std::string read_text_file(const std::string &filename)
+{
+	std::vector<std::string> data;
+
+	std::ifstream file;
+
+	file.open(filename, std::ios::in);
+
+	if (!file.is_open())
+	{
+		LOGI("Opened file didn't work");
+		// throw std::runtime_error("Failed to open file: " + filename);
+	}
+
+	return std::string{(std::istreambuf_iterator<char>(file)),
+	                   (std::istreambuf_iterator<char>())};
+}
+
 
 /**
  * This is the main entry point of a native application that is using
@@ -313,6 +334,7 @@ ASensorManager* AcquireASensorManagerInstance(android_app* app) {
  * event loop for receiving input events and doing other things.
  */
 void android_main(struct android_app* state) {
+
     struct engine engine{};
 
     memset(&engine, 0, sizeof(engine));
@@ -336,8 +358,31 @@ void android_main(struct android_app* state) {
         engine.state = *(struct saved_state*)state->savedState;
     }
 
-    // loop waiting for stuff to do.
+	ANativeActivity* nativeActivity = state->activity;                              
+    const char* internalPath = nativeActivity->internalDataPath;
+    std::string dataPath(internalPath);     
 
+	// This is the assets folder content that doesn't require separate permissions
+	AAssetManager* assetManager = nativeActivity->assetManager;
+	AAsset* configFileAsset = AAssetManager_open(assetManager, "config.txt", AASSET_MODE_BUFFER);
+	const void* configData = AAsset_getBuffer(configFileAsset);
+	const off_t configLen = AAsset_getLength(configFileAsset);
+
+	std::string all_data((const char*)configData);
+
+	LOGI("Opened file size = %ld, and has = %s", configLen, all_data.c_str());
+
+	AAsset_close(configFileAsset);
+
+	LOGI("Here is the internal data path = %s", dataPath.c_str());
+
+	// For the app to be able to access this make sure it has permissions, settings->app->permissions or request via the app via java stuff
+	std::string filename = "/sdcard/temp/another.cfg";
+	auto s = read_text_file(filename);
+ 
+	LOGI("/sdcard/temp/config.txt file has = %s", s.c_str());
+
+    // loop waiting for stuff to do.
     while (true) {
         // Read all pending events.
         int ident;
